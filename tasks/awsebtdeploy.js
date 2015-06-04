@@ -201,7 +201,8 @@ module.exports = function (grunt) {
           deployTimeoutMin: 10,
           deployIntervalSec: 20,
           healthPageTimeoutMin: 5,
-          healthPageIntervalSec: 10
+          healthPageIntervalSec: 10,
+          createVersion: true
         }),
         awsOptions = setupAWSOptions(options),
         qAWS       = wrapAWS(new AWS.ElasticBeanstalk(awsOptions), new AWS.S3(awsOptions));
@@ -510,10 +511,15 @@ module.exports = function (grunt) {
           });
     }
 
-    return checkApplicationExists()
-        .then(checkEnvironmentExists)
-        .then(uploadApplication)
-        .then(createApplicationVersion)
+    var result = checkApplicationExists()
+        .then(checkEnvironmentExists);
+
+    if (options.createVersion) {
+        result = result.then(uploadApplication)
+            .then(createApplicationVersion);
+    }
+
+    return result
         .then(invokeDeployType)
         .then(done, done);
   });
